@@ -10,7 +10,7 @@ import java.util.Locale;
 
 public class Day {
 
-    private final Logger LOGGER = LogManager.getLogger(getClass());
+    public final Logger LOGGER = LogManager.getLogger(getClass());
 
     public String load(String file) {
         return new String(bytes(file), StandardCharsets.UTF_8);
