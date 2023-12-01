@@ -12,6 +12,7 @@ group = 'net.covers1624'
 
 repositories {
     mavenCentral()
+    maven { url "https://maven.covers1624.net" }
 }
 
 dependencies {
