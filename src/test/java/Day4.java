@@ -1,60 +1,66 @@
-import net.covers1624.quack.collection.FastStream;
+import com.google.common.collect.ImmutableSet;
 import org.junit.jupiter.api.Test;
 
-import java.util.ArrayList;
-import java.util.Comparator;
+import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
+import java.util.Set;
 
 public class Day4 extends Day {
 
     @Test
     public void run() {
-        Map<Integer, Card> cards = FastStream.of(loadLines("input.txt"))
-                .map(Card::parse)
-                .toMap(e -> e.num, e -> e);
-
-        System.out.println("Part 1: " + FastStream.of(cards.values()).intSum(e -> e.score));
-        Map<Card, Integer> toDo = FastStream.of(cards.values())
-                .sorted(Comparator.comparingInt(e -> e.num))
-                .toLinkedHashMap(e -> e, e -> 1);
-        List<Card> order = new ArrayList<>(toDo.keySet());
-        int numCards = 0;
-        for (Card card : order) {
-            int num = toDo.get(card);
-            numCards += num;
-            for (int i = card.num + 1; i <= card.num + card.wonNumbers.size(); i++) {
-                Card c = cards.get(i);
-                toDo.put(c, toDo.get(c) + num);
-            }
+        int counter = 0;
+        long[] runs = new long[30];
+        for (int i = 0; i < 300; i++) {
+            long time = System.nanoTime();
+            int[] result = solve();
+            time = System.nanoTime() - time;
+            LOGGER.info("Part 1: {}", result[0]);
+            LOGGER.info("Part 2: {}", result[1]);
+            LOGGER.info("Time {}μs", time / 1000D);
+            runs[counter++ % runs.length] = time;
         }
-        System.out.println("Part 2: " + numCards);
+        double avg = 0;
+        for (long run : runs) {
+            avg += run;
+        }
+        avg /= runs.length;
+        LOGGER.info("Last {} runs avg {}μs", runs.length, avg / 1000D);
     }
 
-    public record Card(int num, List<Integer> numbers, List<Integer> winning, List<Integer> wonNumbers, int score) {
-
-        public static Card parse(String line) {
-            String[] lineSplit = line.split(":");
-            int card = Integer.parseInt(lineSplit[0].substring(5).trim());
-            String numbersStr = lineSplit[1];
-            String[] numberSplit = numbersStr.split("\\|");
-            List<Integer> winning = FastStream.of(numberSplit[0].split(" "))
-                    .map(String::trim)
-                    .filterNot(String::isEmpty)
-                    .map(Integer::parseInt)
-                    .toList();
-
-            List<Integer> numbers = FastStream.of(numberSplit[1].split(" "))
-                    .map(String::trim)
-                    .filterNot(String::isEmpty)
-                    .map(Integer::parseInt)
-                    .toList();
-            List<Integer> wonNumbers = FastStream.of(numbers)
-                    .filter(winning::contains)
-                    .toList();
-
-            int won = wonNumbers.size();
-            return new Card(card, numbers, winning, wonNumbers, won != 0 ? (int) Math.pow(2, wonNumbers.size() - 1) : 0);
+    public int[] solve() {
+        List<String> lines = loadLines("input.txt");
+        int score = 0;
+        int[] cards = new int[lines.size()];
+        for (String line : lines) {
+            int colonSep = line.indexOf(':');
+            int num = Integer.parseInt(line, line.lastIndexOf(' ', colonSep) + 1, colonSep, 10);
+            int pipeSep = line.indexOf('|');
+            Set<String> winningNumbers = ImmutableSet.copyOf(line.substring(colonSep + 1, pipeSep).split(" "));
+            String[] ourNumbers = line.substring(pipeSep + 1).split(" ");
+            int nWinning = 0;
+            for (String ourNumber : ourNumbers) {
+                if (ourNumber.isBlank()) continue;
+                if (winningNumbers.contains(ourNumber)) {
+                    nWinning++;
+                }
+            }
+            cards[num - 1] = nWinning;
+            if (nWinning != 0) {
+                score += (int) Math.pow(2, nWinning - 1);
+            }
         }
+
+        int numCards = 0;
+        int[] part2Cards = new int[lines.size()];
+        Arrays.fill(part2Cards, 1);
+        for (int i = 0; i < part2Cards.length; i++) {
+            int num = part2Cards[i];
+            numCards += num;
+            for (int j = 0; j < cards[i]; j++) {
+                part2Cards[i + j + 1] += num;
+            }
+        }
+        return new int[] { score, numCards };
     }
 }
