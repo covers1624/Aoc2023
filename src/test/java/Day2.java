@@ -1,14 +1,13 @@
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
 public class Day2 extends Day {
 
     @Test
-    public void run() {
-        for (int i = 0; i < 300; i++) {
+    public void run() throws Throwable {
+        byte[] line = open("input.txt").readAllBytes();
+        for (int i = 0; i < 3000; i++) {
             long time = System.nanoTime();
-            int[] result = solve();
+            int[] result = solve(line);
             time = System.nanoTime() - time;
             LOGGER.info("Part 1: {}", result[0]);
             LOGGER.info("Part 2: {}", result[1]);
@@ -16,11 +15,11 @@ public class Day2 extends Day {
         }
     }
 
-    public int[] solve() {
+    public int[] solve(byte[] line) {
         int idSum = 0;
         int totalPower = 0;
-        String line = load("input.txt");
-        int len = line.length();
+
+        int len = line.length;
 
         boolean tooMany = false;
         int id = -1;
@@ -30,7 +29,7 @@ public class Day2 extends Day {
         int maxG = 0;
         int maxB = 0;
         for (int i = 5; i < len; i++) {
-            char ch = line.charAt(i);
+            byte ch = line[i];
             switch (ch) {
                 case '\n' -> {
                     // Reset state.
@@ -51,13 +50,13 @@ public class Day2 extends Day {
                 }
                 case ' ' -> {
                     if (num != -1) {
-                        lastNum = Integer.parseInt(line, num, i, 10);
+                        lastNum = parseInt(line, num, i);
                         num = -1;
                     }
                 }
                 case ':' -> {
                     if (num != -1) {
-                        id = Integer.parseInt(line, num, i, 10);
+                        id = parseInt(line, num, i);
                         num = -1;
                     }
                 }
@@ -85,5 +84,13 @@ public class Day2 extends Day {
             }
         }
         return new int[] { idSum, totalPower };
+    }
+
+    private static int parseInt(byte[] bytes, int start, int end) {
+        int result = 0;
+        for (int i = start; i < end; i++) {
+            result = result * 10 + (bytes[i] - '0');
+        }
+        return result;
     }
 }
