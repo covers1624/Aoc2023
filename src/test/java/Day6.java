@@ -22,29 +22,42 @@ public class Day6 extends Day {
 
     @Test
     public void run() {
-        LOGGER.info("Part 1: {}", runMulti(RACES));
-        LOGGER.info("Part 2: {}", runRace(PART2));
+        int counter = 0;
+        long first = -1;
+        long[] runs = new long[30];
+        for (int i = 0; i < 300; i++) {
+            long time = System.nanoTime();
+            int a = runMulti(RACES);
+            int b = runQuadratic(PART2);
+            time = System.nanoTime() - time;
+            if (first == -1) first = time;
+            LOGGER.info("Part 1: {}", a);
+            LOGGER.info("Part 2: {}", b);
+            LOGGER.info("Time {}μs", time / 1000D);
+            runs[counter++ % runs.length] = time;
+        }
+        double avg = 0;
+        for (long run : runs) {
+            avg += run;
+        }
+        avg /= runs.length;
+        LOGGER.info("First run {}μs {}ns", first / 1000D, first);
+        LOGGER.info("Last {} runs avg {}μs {}ns", runs.length, avg / 1000D, avg);
     }
 
     private int runMulti(List<Race> races) {
         int error = 1;
         for (Race race : races) {
-            error *= runRace(race);
+            error *= runQuadratic(race);
         }
         return error;
     }
 
-    private int runRace(Race race) {
-        int numWon = 0;
-        for (long speed = 1; speed < race.time; speed++) {
-            long remaining = race.time - speed;
-            long dist = speed * remaining;
-            if (dist > race.dist) {
-                numWon++;
-            }
+    private int runQuadratic(Race race) {
+        int min = (int) ((race.time - Math.sqrt(Math.pow(race.time, 2) - 4 * race.dist)) / 2);
+        int max = (int) ((race.time + Math.sqrt(Math.pow(race.time, 2) - 4 * race.dist)) / 2);
 
-        }
-        return numWon;
+        return max - min;
     }
 
     private record Race(long time, long dist) { }
